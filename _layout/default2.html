@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="x-ua-compatible" content="ie=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{{ .Description }}">
+    <title>{{- .Title -}}</title>
+</head>
+<body>
+    <h1>{{ .Title }}</h1>
+    <div class="headmeta">
+    {{- with .Tags }}
+    <ul>
+        {{- range $val := . }}
+        <li><a href="/{{ $val }}/">{{ $val }}</a></li>
+        {{- end }}
+    </ul>
+    {{- end }}
+    </div>
+    <article>
+        {{ .Body -}}
+    </article>
+    <div class="links">
+    {{- with .Tags }}
+    <ul>
+        {{- range $val := . }}
+        <li><a href="/{{ $val }}/">{{ $val }}</a></li>
+        {{- end }}
+    </ul>
+    {{- end }}
+    </div>
+</body>
+</html>
+
