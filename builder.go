@@ -61,17 +61,21 @@ type fmeta struct {
     DatePublished string                     `yaml:"datePublished"`
     DateModifield string                     `yaml:"dateModified"`
     Draft         bool                       `yaml:"draft"`
-    Body          template.HTML                     `yaml:"body"`
+    Code          bool                       `yaml:"code"`
+    Css           []string                   `yaml:"css"`
+    Js            []string                   `yaml:"js"`
+    Layout        string                     `yaml:"layout"`
+    Body          template.HTML              `yaml:"body"`
 }
 
-func time2int (str interface{}) int {
-    a := str.(string)
+func time2int (args interface{}) int {
+    dateTime := args.(string)
     var i int
-    b := strings.Replace(a, "-", "", -1)
-    c := strings.Replace(b, ":", "", -1)
-    d := strings.Replace(c, "T", "", -1)
-    e := strings.Replace(d, "+", "", -1)
-    i, _ = strconv.Atoi(e)
+    dateTime = strings.Replace(dateTime, "-", "", -1)
+    dateTime = strings.Replace(dateTime, ":", "", -1)
+    dateTime = strings.Replace(dateTime, "T", "", -1)
+    dateTime = strings.Replace(dateTime, "+", "", -1)
+    i, _ = strconv.Atoi(dateTime)
     return i
 }
 
@@ -132,19 +136,6 @@ func main() {
     fmt.Printf("meta2: %#v\n\n", meta2)
 
     // os.WriteFile("./test-file.html", []byte(new_html), 0644)
-
-    // ファイル生成 1
-    // newfile, err := os.Create("./test-file2.html")
-    // if err != nil {
-    //     log.Println("create file", err)
-    //     return
-    // }
-    // err = t.Execute(newfile, meta)
-    // if err != nil {
-    //     log.Println("create file", err)
-    //     return
-    // }
-    // newfile.Close()
 
     // ファイル生成 2
     new_buf := new(bytes.Buffer)
