@@ -1,0 +1,16 @@
+BaseUrl: 'https://sa.sasasa.org/'
+Title: 'fargo'
+source: ''
+name: ''
+destination: ''
+posts: ''
+data: ''
+includes: ''
+layouts: ''
+permalink: ''
+exclude: ['']
+host: ''
+port: ''
+limit_posts: ''
+markdown_ext: ''
+

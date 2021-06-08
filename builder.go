@@ -9,6 +9,7 @@ import (
 	// "net/http"
 	// "net/url"
     "reflect"
+	"io"
 	"os"
 	// "os/exec"
 	"path/filepath"
@@ -36,7 +37,22 @@ func checkFatal(err error) {
     }
 }
 
-type config struct {
+type Meta struct {
+    Title         string                     `yaml:"title"`        // meta
+    Description   string                     `yaml:"description"`  //
+    Tags          []string                   `yaml:"tags"`         //
+    DatePublished string                     `yaml:"datePublished"`//
+    DateModified  string                     `yaml:"dateModified"` //
+    Draft         bool                       `yaml:"draft"`        //
+    Code          bool                       `yaml:"code"`         //
+    Css           []string                   `yaml:"css"`          //
+    Js            []string                   `yaml:"js"`           //
+    Layout        string                     `yaml:"layout"`       //
+    Slug          string                     `yaml:"slug"`         //
+    Body          template.HTML              `yaml:"body"`         //
+}
+
+type Config struct {
     Baseurl     string                       `yaml:"baseurl"`
     Title       string                       `yaml:"title"`
     Source      string                       `yaml:"source"`
@@ -54,20 +70,6 @@ type config struct {
     MarkdownExt string                       `yaml:"markdown_ext"`
 }
 
-type fmeta struct {
-    Title         string                     `yaml:"title"`
-    Description   string                     `yaml:"description"`
-    Tags          []string                   `yaml:"tags"`
-    DatePublished string                     `yaml:"datePublished"`
-    DateModifield string                     `yaml:"dateModified"`
-    Draft         bool                       `yaml:"draft"`
-    Code          bool                       `yaml:"code"`
-    Css           []string                   `yaml:"css"`
-    Js            []string                   `yaml:"js"`
-    Layout        string                     `yaml:"layout"`
-    Body          template.HTML              `yaml:"body"`
-}
-
 func time2int (args interface{}) int {
     dateTime := args.(string)
     var i int
@@ -79,73 +81,28 @@ func time2int (args interface{}) int {
     return i
 }
 
+func copyFile(src, dst string) (int64, error) {
+    sf, err := os.Open(src)
+    if err != nil {
+        return 0, err
+    }
+    defer sf.Close()
+    df, err := os.Create(dst)
+    if err != nil {
+        return 0, err
+    }
+    defer df.Close()
+    return io.Copy(df, sf)
+}
+
+func fileExists(filename string) bool {
+    _, err := os.Stat(filename)
+    return err == nil
+}
+
 func main() {
     // テンプレートの読み込み
     t := template.Must(template.ParseFiles("./_layout/default2.html"))
-
-    // md ファイル読み込み
-    b, e := os.ReadFile("./_post/001.md")
-    if e != nil {
-        log.Fatal(e)
-    }
-    // 一旦 string型にして、frontmatter(metadata)を抜く
-    content := string(b)
-    lines := strings.Split(content, "\n")
-    if len(lines) > 2 && lines[0] == "---" {
-        var n int
-        var line string
-        for n, line = range lines[1:] {
-            if line == "---" {
-                break
-            }
-        }
-        content = strings.Join(lines[n+2:], "\n")
-    }
-    // frontmatter を取り除いた部分を html に変換 
-    var buf bytes.Buffer
-    if err2 := goldmark.Convert([]byte(content), &buf); err2 != nil {
-        panic(err2)
-    }
-
-    // ストリング型に戻した html を確認
-    new_html := buf.Bytes()
-    fmt.Println("complete convert markdown")
-
-    // yaml の操作
-    var meta map[string]interface{}
-    var meta2 fmeta
-
-    err3 := yaml.Unmarshal([]byte(b), &meta)
-    if err3 != nil {
-        log.Fatalf("error: %v", err3)
-    }
-    err4 := yaml.Unmarshal([]byte(b), &meta2)
-    if err4 != nil {
-        log.Fatalf("error: %v", err4)
-    }
-    fmt.Println(reflect.TypeOf(meta))
-    fmt.Printf("meta: %#v\n\n", meta)
-    fmt.Println(reflect.TypeOf(meta2))
-    fmt.Printf("meta2: %#v\n\n", meta2)
-    // fmt.Println(&meta)
-    // コンテンツ部分を 構造体へ追加 安全性に関して考える必要がある
-    meta["body"] = template.HTML(new_html)
-    fmt.Println(reflect.TypeOf(meta["body"]))
-    meta2.Body = template.HTML(new_html)
-    fmt.Println(reflect.TypeOf(meta2))
-    fmt.Printf("meta2: %#v\n\n", meta2)
-
-    // os.WriteFile("./test-file.html", []byte(new_html), 0644)
-
-    // ファイル生成 2
-    new_buf := new(bytes.Buffer)
-    dst := "./test-file3.html"
-    data := meta2
-    if err := t.Execute(new_buf, data); err != nil {
-        log.Println("create file", err)
-    }
-    // fmt.Println(new_buf)
-    os.WriteFile(dst, new_buf.Bytes(), 0644)
 
     // ディレクトリのファイル一覧を得る
     dirName := "./_post/"
@@ -153,43 +110,144 @@ func main() {
     if err != nil {
         log.Fatal(err)
     }
-    var metalist []map[string]interface{}
+
+    // タグのリスト
     var taglist []string
-    // var taglist []string
-    // 取得した一覧を表示
+    // post のデータリスト
+    metalist := make([]Meta, 0)
+
+    // _post内のファイルをループ
     for _, file := range files {
-        // fmt.Println(file)
-        newfile := filepath.Join(dirName, file.Name())
-        b, e := os.ReadFile(newfile)
+        // markdownファイルからHTMLファイル作成
+        fpath := file.Name()
+        srcFile := filepath.Join(dirName, fpath)
+        // fmt.Println(srcFile)
+        slug := filepath.Base(fpath[:len(fpath)-len(filepath.Ext(fpath))])
+        // ファイルの中身を読み取る
+        b, e := os.ReadFile(srcFile)
         if e != nil {
             log.Fatal(e)
         }
-        var metadata map[string]interface{}
-        err3 := yaml.Unmarshal([]byte(b), &metadata)
-        if err3 != nil {
-            log.Fatalf("error: %v", err3)
-        }
-        // data := &metadata
-        fpath := file.Name()
-        slug := filepath.Base(fpath[:len(fpath)-len(filepath.Ext(fpath))])
-        metadata["slug"] = slug
-        metalist = append(metalist, metadata)
-        tagsInterface := metadata["tags"].([]interface{})
-        tagsString := make([]string, len(tagsInterface))
-        for i, v := range tagsInterface {
-            tagsString[i] = v.(string)
-            for _, tag := range tagsString {
-                taglist = append(taglist, tag)
+        // 一旦 string型にして、frontmatter(metadata)を抜く
+        content := string(b)
+        lines := strings.Split(content, "\n")
+        if len(lines) > 2 && lines[0] == "---" {
+            var n int
+            var line string
+            for n, line = range lines[1:] {
+                if line == "---" {
+                    break
+                }
             }
+            content = strings.Join(lines[n+2:], "\n")
         }
-        // fmt.Printf("tagsString: %v", tagsString)
+        // frontmatter を取り除いた部分を html に変換 
+        var buf bytes.Buffer
+        if err = goldmark.Convert([]byte(content), &buf); err != nil {
+            panic(err)
+        }
+        new_html := buf.Bytes()
 
-        // for _, v := range tags {
-        //     fmt.Println(v)
-        // }
+        // frontmatter を取得
+        var meta Meta
+        err = yaml.Unmarshal([]byte(b), &meta)
+        if err != nil {
+            log.Fatalf("error: %v", err)
+        }
+        fmt.Println(reflect.TypeOf(meta))
+        fmt.Printf("meta: %#v\n\n", meta)
+        // コンテンツ部分を 構造体へ追加 安全性に関して考える必要がある
+        fmt.Println(reflect.TypeOf(meta.Body))
+        meta.Slug = slug
+        metalist = append(metalist, meta)
+        meta.Body = template.HTML(new_html)
+
+        // os.WriteFile("./test-file.html", []byte(new_html), 0644)
+        // ファイル生成
+        new_buf := new(bytes.Buffer)
+        dst := "./_site"
+        dstDir := filepath.Join(dst, slug)
+        err = os.MkdirAll(dstDir, 0755)
+        dst = filepath.Join(dst, slug, "index.html")
+        if err = t.Execute(new_buf, meta); err != nil {
+            log.Println("create file", err)
+        }
+        // fmt.Println(new_buf)
+        os.WriteFile(dst, new_buf.Bytes(), 0644)
+
+        taglist = append(taglist, meta.Tags...)
     }
-    fmt.Printf("type of taglist: %#v\n", reflect.TypeOf(taglist))
-    fmt.Printf("taglist: %#v\n", taglist)
+
+    // ------------------ page 生成
+    dirName = "./_page/"
+    files, err = os.ReadDir(dirName)
+    if err != nil {
+        log.Fatal(err)
+    }
+    // _page内のファイルをループ
+    for _, file := range files {
+        // markdownファイルからHTMLファイル作成
+        fpath := file.Name()
+        srcFile := filepath.Join(dirName, fpath)
+        // fmt.Println(srcFile)
+        slug := filepath.Base(fpath[:len(fpath)-len(filepath.Ext(fpath))])
+        // ファイルの中身を読み取る
+        b, e := os.ReadFile(srcFile)
+        if e != nil {
+            log.Fatal(e)
+        }
+        // 一旦 string型にして、frontmatter(metadata)を抜く
+        content := string(b)
+        lines := strings.Split(content, "\n")
+        if len(lines) > 2 && lines[0] == "---" {
+            var n int
+            var line string
+            for n, line = range lines[1:] {
+                if line == "---" {
+                    break
+                }
+            }
+            content = strings.Join(lines[n+2:], "\n")
+        }
+        // frontmatter を取り除いた部分を html に変換 
+        var buf bytes.Buffer
+        if err = goldmark.Convert([]byte(content), &buf); err != nil {
+            panic(err)
+        }
+        new_html := buf.Bytes()
+
+        // frontmatter を取得
+        var meta Meta
+        err = yaml.Unmarshal([]byte(b), &meta)
+        if err != nil {
+            log.Fatalf("error: %v", err)
+        }
+        fmt.Println(reflect.TypeOf(meta))
+        fmt.Printf("meta: %#v\n\n", meta)
+        // コンテンツ部分を 構造体へ追加 安全性に関して考える必要がある
+        fmt.Println(reflect.TypeOf(meta.Body))
+        meta.Slug = slug
+        metalist = append(metalist, meta)
+        meta.Body = template.HTML(new_html)
+
+        // os.WriteFile("./test-file.html", []byte(new_html), 0644)
+        // ファイル生成
+        new_buf := new(bytes.Buffer)
+        dst := "./_site"
+        if fpath == "index.md" {
+            dst = filepath.Join(dst, "index.html")
+        } else {
+            dstDir := filepath.Join(dst, slug)
+            err = os.MkdirAll(dstDir, 0755)
+            dst = filepath.Join(dst, slug, "index.html")
+        }
+
+        if err = t.Execute(new_buf, meta); err != nil {
+            log.Println("create file", err)
+        }
+        // fmt.Println(new_buf)
+        os.WriteFile(dst, new_buf.Bytes(), 0644)
+    }
 
     // taglistの重複を削除する
     taglistM := make(map[string]struct{})
@@ -206,24 +264,98 @@ func main() {
     fmt.Printf("mapの中身: %#v\n", taglistM)
     fmt.Printf("重複削除後: %#v\n", tagList)
 
+    // -----------------それぞれの tag の index page 生成
+    dirName = "./_tags/"
+    files, err = os.ReadDir(dirName)
+    if err != nil {
+        log.Fatal(err)
+    }
 
-    // fmt.Println(reflect.TypeOf(metalist))
-    // fmt.Println(reflect.TypeOf(metalist[5]["datePublished"]))
-    // fmt.Println(metalist[5]["datePublished"])
+    for _, tag := range tagList {
+        s := []string{tag, ".md"}
+        fName := strings.Join(s, "")
+        srcFile := filepath.Join(dirName, fName)
+        if !fileExists(srcFile) {
+            copyFile("./_layout/tag.md", srcFile)
+        }
+    }
 
-    // tag のページを作成
-    // for _, v := range tagList {
-    //     tagDirName := d
-    // }
+    // _tags 内のファイルをループ
+    for _, file := range files {
+        // markdownファイルからHTMLファイル作成
+        fpath := file.Name()
+        srcFile := filepath.Join(dirName, fpath)
+        // fmt.Println(srcFile)
+        slug := filepath.Base(fpath[:len(fpath)-len(filepath.Ext(fpath))])
+        // ファイルの中身を読み取る
+        b, e := os.ReadFile(srcFile)
+        if e != nil {
+            log.Fatal(e)
+        }
+        // 一旦 string型にして、frontmatter(metadata)を抜く
+        content := string(b)
+        lines := strings.Split(content, "\n")
+        if len(lines) > 2 && lines[0] == "---" {
+            var n int
+            var line string
+            for n, line = range lines[1:] {
+                if line == "---" {
+                    break
+                }
+            }
+            content = strings.Join(lines[n+2:], "\n")
+        }
+        // frontmatter を取り除いた部分を html に変換 
+        var buf bytes.Buffer
+        if err = goldmark.Convert([]byte(content), &buf); err != nil {
+            panic(err)
+        }
+        new_html := buf.Bytes()
 
-    // encode json
+        // frontmatter を取得
+        var meta Meta
+        err = yaml.Unmarshal([]byte(b), &meta)
+        if err != nil {
+            log.Fatalf("error: %v", err)
+        }
+        fmt.Println(reflect.TypeOf(meta))
+        fmt.Printf("meta: %#v\n\n", meta)
+        // コンテンツ部分を 構造体へ追加 安全性に関して考える必要がある
+        fmt.Println(reflect.TypeOf(meta.Body))
+        meta.Slug = slug
+        metalist = append(metalist, meta)
+        meta.Body = template.HTML(new_html)
 
-    // 日付降順に並べる
-    sort.Slice(metalist, func(i, j int) bool { return time2int(metalist[i]["dateModified"]) > time2int(metalist[j]["dateModified"]) })
+        // os.WriteFile("./test-file.html", []byte(new_html), 0644)
+        // ファイル生成
+        new_buf := new(bytes.Buffer)
+        dst := "./_site"
+        dstDir := filepath.Join(dst, slug)
+        err = os.MkdirAll(dstDir, 0755)
+        dst = filepath.Join(dst, slug, "index.html")
+        if err = t.Execute(new_buf, meta); err != nil {
+            log.Println("create file", err)
+        }
+        // fmt.Println(new_buf)
+        os.WriteFile(dst, new_buf.Bytes(), 0644)
+
+        taglist = append(taglist, meta.Tags...)
+    }
+
+    // ------------------- index.html
+
+    // fmt.Printf("type of taglist: %#v\n", reflect.TypeOf(taglist))
+    // fmt.Printf("taglist: %#v\n", taglist)
+
+
+
+    // // 日付降順に並べる トップページの一覧用
+    sort.Slice(metalist, func(i, j int) bool { return time2int(metalist[i].DateModified) > time2int(metalist[j].DateModified) })
     // fmt.Println(metalist)
 
     // json化 javascript で扱うときのため
     sample_json, _ := json.Marshal(&metalist)
     fmt.Printf("[page-data.json]: %v\n", string(sample_json))
+    os.WriteFile("./_site/data/page-data.json", sample_json, 0644)
 }
 

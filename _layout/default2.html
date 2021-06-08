@@ -8,17 +8,18 @@
     <title>{{- .Title -}}</title>
 </head>
 <body>
-    <h1>{{ .Title }}</h1>
-    <div class="headmeta">
-    {{- with .Tags }}
-    <ul>
-        {{- range $val := . }}
-        <li><a href="/{{ $val }}/">{{ $val }}</a></li>
-        {{- end }}
-    </ul>
-    {{- end }}
-    </div>
+    <main>
     <article>
+        <h1>{{ .Title }}</h1>
+        <div class="headmeta">
+        {{- with .Tags }}
+            <ul>
+                {{- range $val := . }}
+                <li><a href="/{{ $val }}/">{{ $val }}</a></li>
+                {{- end }}
+            </ul>
+        {{- end }}
+        </div>
         {{ .Body -}}
     </article>
     <div class="links">
@@ -30,6 +31,6 @@
     </ul>
     {{- end }}
     </div>
+    </main>
 </body>
 </html>
-
