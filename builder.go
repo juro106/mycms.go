@@ -45,6 +45,7 @@ type Meta struct {
     DatePublished string                     `yaml:"datePublished"`//
     DateModified  string                     `yaml:"dateModified"` //
     Draft         bool                       `yaml:"draft"`        //
+    Home          bool                       `yaml:"home"`        //
     Fixed         bool                       `yaml:"fixed"`         //
     Option        []string                   `yaml:"option"`         //
     Layout        string                     `yaml:"layout"`       //
@@ -74,6 +75,9 @@ type Config struct {
 var cfg Config
 // 全ページのデータリスト
 var metalist = make([]Meta, 0)
+// 投稿ページのリスト
+var postlist = make([]Meta, 0)
+// tag リスト
 var taglist []string
 
 
@@ -216,6 +220,10 @@ func (cfg *Config) convertFile(dirName, tpl string) {
         if len(meta.Tags) > 0 {
             taglist = append(taglist, meta.Tags...)
         }
+        // 投稿ページの場合は、リストへデータ追加
+        if dirName == "./_posts" {
+            postlist = append(postlist, meta)
+        }
         metalist = append(metalist, meta)
 
         // fmt.Println(new_buf)
@@ -288,6 +296,7 @@ func main() {
     err = os.MkdirAll(jsDir, 0755)
     err = os.MkdirAll(cssDir, 0755)
     copyFile("./_assets/js/main.js", "./_site/js/main.js")
+    copyFile("./_assets/js/top-page.js", "./_site/js/top-page.js")
     copyFile("./_assets/css/style.css", "./_site/css/style.css")
 
     f, err := os.OpenFile("./_site/js/main.js", os.O_APPEND | os.O_WRONLY, 0600)
@@ -301,12 +310,14 @@ func main() {
     fmt.Fprintln(f, jsTagList);
 
     // // 日付降順に並べる トップページの一覧用
-    sort.Slice(metalist, func(i, j int) bool { return time2int(metalist[i].DateModified) > time2int(metalist[j].DateModified) })
+    sort.Slice(postlist, func(i, j int) bool { return time2int(postlist[i].DateModified) > time2int(postlist[j].DateModified) })
     // fmt.Println(metalist)
 
     // json化 javascript で扱うときのため
-    sample_json, _ := json.Marshal(&metalist)
+    data_json, _ := json.Marshal(&metalist)
+    post_json, _ := json.Marshal(&postlist)
     // fmt.Printf("[page-data.json]: %v\n", string(sample_json))
-    os.WriteFile("./_site/data/page-data.json", sample_json, 0644)
+    os.WriteFile("./_site/data/page-data.json", data_json, 0644)
+    os.WriteFile("./_site/data/post-data.json", post_json, 0644)
 }
 

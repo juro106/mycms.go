@@ -7,7 +7,11 @@
     {{ with .Description }}<meta name="description" content="{{ . }}">{{ end }}
     <title>{{- .Title -}}</title>
     <link rel="stylesheet" href="/css/style.css">
+    {{- if .Home }}
+    <script src="/js/top-page.js"></script>
+    {{- else }}
     <script src="/js/main.js"></script>
+    {{- end }}
 </head>
 <body>
     <main id="main">
@@ -22,7 +26,7 @@
             </ul>
         </div>
         {{- end }}
-        {{ .Body -}}
+        {{ .Body }}
     </article>
     {{- with .Tags }}
     <div class="links">
