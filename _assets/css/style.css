@@ -1,7 +1,302 @@
+:root {
+    --my-background: #f9f5e5;
+    --gray: #ccc;
+    --link-blue: #004ad2;
+    --link-red:  #b22222;
+}
+html {
+    font-size: 62.5%;
+}
 body {
     margin: 0;
     padding: 0;
+    background-color: var(--my-background);
+    font-size: 1.8rem;
 }
-main {
+/* layout */
+#header {
     padding: 10px;
 }
+#main {
+    padding: 10px;
+}
+#article-header {
+    padding: 0;
+    margin: 0 0 20px;
+}
+#footer {
+    padding: 10px;
+}
+
+/* element */
+a {
+    color: var(--link-blue);
+}
+a:hover {
+    color: var(--link-red);
+}
+ul {
+    list-style-type: disc;
+    padding: 0 0 0 1em;
+}
+.block-link {
+    display: block;
+    width: 100%;
+    text-decoration: none;
+}
+.ad {
+    padding: 20px 0;
+    min-height: 200px;
+}
+.sa-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    border: solid 2px #333;
+    box-sizing: border-box;
+    text-align: center;
+    font-family: "Yu Mincho", "Hiragino Mincho", serif;
+    font-weight:bold;
+    background:#fff;
+    user-select: none;
+    color: #000;
+    margin: 0 5px 0 0;
+    width: 35px;
+    height: 35px;
+    line-height: 20px;
+    font-size: 20px;
+    border: solid 1.5px #333;
+}
+.sa-icon::before {
+    content: "さ";
+    text-decoration: none;
+}
+.sa-icon:hover::before {
+    content: "と";
+    color: red;
+    text-decoration: none;
+}
+
+#page-title {
+    margin: 20px 0 0;
+}
+.datetime-box {
+    font-size: 1.6rem;
+    color: #666666;
+}
+
+.links {
+    margin: 20px 0;
+}
+.link-list {
+    display: flex;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+.link-list-item {
+    margin: 0 10px 0 0;
+}
+.b-sharp::before {
+    content: '#';
+}
+.related-list {
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+.related-list-item {
+    box-sizing: border-box;
+    padding: 0 10px 10px 0;
+    width: 50%;
+    height: auto;
+}
+.related-link {
+    background: #fefefe;
+    display: block;
+    border: 1px solid #eee;
+    padding: 10px;
+    text-decoration: none;
+    min-height: 155px;
+}
+.related-link:hover {
+    background: #ccc;
+} 
+.item-title {
+    color: #222;
+    font-size: 1.6rem; 
+    font-weight: bold;
+    margin: 0 0 10px; 
+}
+.dscr {
+    font-size: 1.5rem; 
+    color: #888;
+    margin: 0;
+}
+
+@media screen and (min-width: 750px) {
+    .related-list-item {
+        width: 33%;
+    }
+}
+@media screen and (min-width: 900px) {
+    .related-list-item {
+        width: 20%;
+    }
+}
+@media screen and (min-width: 1200px) {
+    .related-list-item {
+        width: 200px;
+    }
+    .highlight {margin: 20px 0}
+}
+
+code {
+    padding: 0 .3em;
+    margin: 0;
+    background-color: rgba(27,31,35,.05);
+    border-radius: 3px;
+    border: solid 1px #ccc;
+    font-size: 85%;
+    font-family: auto;
+}
+.highlight{margin: 20px -15px; }
+pre code {
+    padding:0;
+    margin: 0;
+    font-size: 1.5rem;
+    font-family: "SFMono-Regular",Consolas,"Liberation Mono",Menlo,Monaco,Courier,monospace;
+    border: 0;
+}
+pre {overflow-x: auto;padding: 20px; color: #f8f8f2; background-color: #272822 }
+
+/* PrismJS 1.23.0
+https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clike+javascript+bash+c+csharp+cpp+csv+git+go+graphql+haskell+java+markup-templating+perl+php+python+ruby+rust+sql+toml+typescript+typoscript+uri+vim+xml-doc+yaml */
+/**
+ * okaidia theme for JavaScript, CSS and HTML
+ * Loosely based on Monokai textmate theme by http://www.monokai.nl/
+ * @author ocodia
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: #f8f8f2;
+	background: none;
+	text-shadow: 0 1px rgba(0, 0, 0, 0.3);
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	font-size: 1.5rem;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+	line-height: 1.5;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+	border-radius: 0.3em;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	background: #272822;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	border-radius: .3em;
+	white-space: normal;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: #8292a2;
+}
+
+.token.punctuation {
+	color: #f8f8f2;
+}
+
+.token.namespace {
+	opacity: .7;
+}
+
+.token.property,
+.token.tag,
+.token.constant,
+.token.symbol,
+.token.deleted {
+	color: #f92672;
+}
+
+.token.boolean,
+.token.number {
+	color: #ae81ff;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+	color: #a6e22e;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string,
+.token.variable {
+	color: #f8f8f2;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.function,
+.token.class-name {
+	color: #e6db74;
+}
+
+.token.keyword {
+	color: #66d9ef;
+}
+
+.token.regex,
+.token.important {
+	color: #fd971f;
+}
+
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
+}
+
+.token.entity {
+	cursor: help;
+}
+

@@ -1,0 +1,65 @@
+{{- template "head" }}
+<body>
+    <header id="header">
+        <a class='block-link' href="/">
+            <div class="sa-icon"></div>
+        </a>
+    </header>
+    <main id="main">
+    <article id="article">
+        <header id="article-header">
+            <h1 id="page-title">{{ .Title }}</h1>
+            {{- if .Tags }}
+            <div class="headmeta">
+                <div class="datetime-box">
+                    <span>published:</span>
+                    <time class="datetime-item" datetime={{ .DatePublished }}>
+                        {{- .DateP -}}
+                    </time>
+                    {{- if .DateM }}
+                    <span>modified:</span>
+                    <time class="datetime-item" datetime={{ .DateModified }}>
+                        {{- .DateM -}}
+                    </time>
+                    {{- end }}
+                </div>
+                <div class="links">
+                    <ul class="link-list">
+                        {{- range $val := .Tags }}
+                        <li class="link-list-item"><a class="link" href="/{{ $val }}/"><span class="b-sharp">{{ $val }}</span></a></li>
+                        {{- end }}
+                    </ul>
+                </div>
+            </div>
+            {{- end }}
+        </header>
+        {{ .Body }}
+    </article>
+    {{- with .Tags }}
+    <div class="links">
+        <ul class="link-list">
+            {{- range $val := . }}
+            <li class="link-list-item"><a class="link" href="/{{ $val }}/"><span class="b-sharp">{{ $val }}</span></a></li>
+            {{- end }}
+        </ul>
+    </div>
+    {{- end }}
+    {{- with .PageTag }}
+        {{- range $key, $val := . }}
+        <h3>{{- $key -}}</h3>
+        <ul class="related-list">
+            {{- range $v := $val }}
+            <li class="related-list-item">
+                <a class="related-link" href="/{{- $v.Slug -}}/">
+                    <div class="item-title">{{- $v.Title -}}</div>
+                    <div class="dscr">{{- $v.Description -}}</div>
+                </a> 
+            </li>
+            {{- end }}
+        </ul>
+        {{- end }}
+    {{- end }}
+    </main>
+    {{- template "footer" }}
+</body>
+</html>

@@ -1,0 +1,30 @@
+{{- template "head" }}
+    <body>
+        <header id="header">
+            <a class='block-link' href="/">
+                <div class="sa-icon"></div>
+            </a>
+        </header>
+        <main id="main">
+        <article id="article">
+            <header id="article-header">
+                <h1 id="page-title">{{ .Title }}</h1>
+            </header>
+            {{- .Body }}
+            {{- with .B2Page }}
+            <ul class="related-list">
+                {{- range $val := . }}
+                <li class="related-list-item">
+                    <a class="related-link" href="/{{ $val.Slug }}/">
+                        <div class="item-title">{{ $val.Title }}</div>
+                        <div class="dscr">{{ $val.Description }}</div>
+                    </a>
+                </li>
+                {{- end }}
+            </ul>
+            {{- end }}
+        </article>
+        </main>
+        {{- template "footer" }}
+    </body>
+</html>
