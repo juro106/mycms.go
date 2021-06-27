@@ -334,7 +334,6 @@ func main() {
     cfg.convertFile("./_layouts/tag.html", "tag")
 
     // fmt.Printf("type of taglist: %#v\n", reflect.TypeOf(taglist))
-    // fmt.Printf("taglist: %#v\n", taglist)
 
     jsDir := filepath.Join(cfg.Destination, "js")
     cssDir := filepath.Join(cfg.Destination, "css")
