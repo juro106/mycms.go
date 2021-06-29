@@ -1,9 +1,9 @@
 ---
 title: 'So Many People'
 description: 'Hi'
-tags: ["テスト", "English"]
+tags: ["テスト", "english"]
 datePublished: '2021-06-05T14:40:34+09:00'
-dateModified: '2021-06-05T14:56:50+09:00'
+dateModified: '2021-06-30T01:49:35+09:00'
 ---
 
 ## これは見出し2、H2 です。

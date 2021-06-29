@@ -1,13 +1,20 @@
 :root {
     --my-background: #f9f5e5;
+    --hobo-white: #fefefa;
     --gray: #ccc;
     --link-blue: #004ad2;
     --link-red:  #b22222;
+    --contents-width-s: 48em;
+    --contents-width-m: 50em;
+    --contents-width-l: 55em;
 }
 html {
     font-size: 62.5%;
 }
 body {
+    display: flex;
+    flex-flow: column;
+    min-height: 100vh;
     margin: 0;
     padding: 0;
     background-color: var(--my-background);
@@ -15,9 +22,17 @@ body {
 }
 /* layout */
 #header {
+    margin: 0;
+}
+#header-inner {
     padding: 10px;
+    display: flex;
 }
 #main {
+    flex: 1;
+}
+#article {
+    background: var(--hobo-white);
     padding: 10px;
 }
 #article-header {
@@ -25,6 +40,9 @@ body {
     margin: 0 0 20px;
 }
 #footer {
+    margin: 20px 0 0;
+}
+#footer-inner {
     padding: 10px;
 }
 
@@ -35,6 +53,10 @@ a {
 a:hover {
     color: var(--link-red);
 }
+.heading-links {
+    padding: 0 0 0 5px;
+    margin: 20px 0 5px;
+}
 ul {
     list-style-type: disc;
     padding: 0 0 0 1em;
@@ -44,29 +66,39 @@ ul {
     width: 100%;
     text-decoration: none;
 }
+.visuallyhidden {
+    position: absolute;
+    clip: rect(1px, 1px, 1px, 1px);
+    -webkit-clip-path: inset(0px 0px 99.9% 99.9%);
+    clip-path: inset(0px 0px 99.9% 99.9%);
+    overflow: hidden;
+    height: 1px;
+    width: 1px;
+    padding: 0;
+    border: 0;
+}
 .ad {
     padding: 20px 0;
     min-height: 200px;
 }
 .sa-icon {
-    display: flex;
-    justify-content: center;
     align-items: center;
-    border-radius: 50%;
-    border: solid 2px #333;
-    box-sizing: border-box;
-    text-align: center;
-    font-family: "Yu Mincho", "Hiragino Mincho", serif;
-    font-weight:bold;
     background:#fff;
-    user-select: none;
-    color: #000;
-    margin: 0 5px 0 0;
-    width: 35px;
-    height: 35px;
-    line-height: 20px;
-    font-size: 20px;
     border: solid 1.5px #333;
+    border-radius: 50%;
+    box-sizing: border-box;
+    color: #000;
+    display: flex;
+    font-size: 2.3rem;
+    font-weight:bold;
+    font-family: "Yu Mincho", "Hiragino Mincho", serif;
+    height: 40px;
+    justify-content: center;
+    line-height: 20px;
+    margin: 0 5px 0 0;
+    text-align: center;
+    user-select: none;
+    width: 40px;
 }
 .sa-icon::before {
     content: "さ";
@@ -77,7 +109,11 @@ ul {
     color: red;
     text-decoration: none;
 }
-
+.copy-right {
+    font-size: 2.1rem;
+    font-weight: bold;
+    font-family: "Yu Mincho", "Hiragino Mincho", serif;
+}
 #page-title {
     margin: 20px 0 0;
 }
@@ -101,30 +137,34 @@ ul {
 .b-sharp::before {
     content: '#';
 }
+.related-pages {
+    padding: 10px 5px;
+    margin: 0 auto;
+}
 .related-list {
-    display: flex;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    list-style-type: none;
-    margin: 0;
+    margin: 0 auto;
     padding: 0;
+    width: var(--contents-widht);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    list-style-type: none;
 }
 .related-list-item {
     box-sizing: border-box;
-    padding: 0 10px 10px 0;
-    width: 50%;
-    height: auto;
+    padding: 5px;
 }
 .related-link {
-    background: #fefefe;
+    background: var(--hobo-white);
     display: block;
-    border: 1px solid #eee;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
     padding: 10px;
     text-decoration: none;
-    min-height: 155px;
+    height: 200px;
+    overflow: hidden;
 }
 .related-link:hover {
-    background: #ccc;
+    background: #efefef;
 } 
 .item-title {
     color: #222;
@@ -132,48 +172,98 @@ ul {
     font-weight: bold;
     margin: 0 0 10px; 
 }
-.dscr {
+.dscr h2,
+.dscr h3,
+.dscr h4,
+.dscr h5,
+.dscr ul,
+.dscr li,
+.dscr pre,
+.dscr code,
+.dscr p,
+.dscr{
     font-size: 1.5rem; 
     color: #888;
     margin: 0;
 }
 
-@media screen and (min-width: 750px) {
-    .related-list-item {
-        width: 33%;
+@media only screen and (min-width: 415px) {
+    .related-list {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     }
 }
-@media screen and (min-width: 900px) {
-    .related-list-item {
-        width: 20%;
+@media only screen and (min-width: 750px) {
+    #article {
+        border: solid 1px #ccc; 
+        box-sizing: border-box;
+        padding: 10px 35px;
+        margin: 0 auto;
+    } 
+    #header-inner,
+    #footer-inner {
+        margin: 0 auto;
+    }
+    .related-list {
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+    .related-pages {
+        width: var(--contents-width-s);
+    }
+    #article,
+    #header-inner,
+    #footer-inner {
+       width: calc(var(--contents-width-s) - 10px);
+    }
+}
+@media only screen and (min-width: 900px) {
+    .related-pages {
+        width: var(--contents-width-m);
+    }
+    #article,
+    #header-inner,
+    #footer-inner {
+        width: calc(var(--contents-width-m) - 10px);
     }
 }
 @media screen and (min-width: 1200px) {
-    .related-list-item {
-        width: 200px;
+    .highlight {
+        margin: 20px 0;
     }
-    .highlight {margin: 20px 0}
+    .related-pages {
+        width: var(--contents-width-l);
+    }
+    #article,
+    #header-inner,
+    #footer-inner {
+        width: calc(var(--contents-width-l) - 10px);
+    }
 }
 
+/* pre & code */
+pre {
+	white-space: break-spaces;
+    padding: 20px;
+    color: #f8f8f2;
+    background-color: #272822;
+}
 code {
     padding: 0 .3em;
     margin: 0;
     background-color: rgba(27,31,35,.05);
-    border-radius: 3px;
     border: solid 1px #ccc;
-    font-size: 85%;
+    font-size: 1.4rem;
     font-family: auto;
 }
 .highlight{margin: 20px -15px; }
 pre code {
     padding:0;
     margin: 0;
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     font-family: "SFMono-Regular",Consolas,"Liberation Mono",Menlo,Monaco,Courier,monospace;
     border: 0;
 }
-pre {overflow-x: auto;padding: 20px; color: #f8f8f2; background-color: #272822 }
-
 /* PrismJS 1.23.0
 https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clike+javascript+bash+c+csharp+cpp+csv+git+go+graphql+haskell+java+markup-templating+perl+php+python+ruby+rust+sql+toml+typescript+typoscript+uri+vim+xml-doc+yaml */
 /**
@@ -188,9 +278,9 @@ pre[class*="language-"] {
 	background: none;
 	text-shadow: 0 1px rgba(0, 0, 0, 0.3);
 	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-	font-size: 1.5rem;
+	font-size: 1.4rem;
 	text-align: left;
-	white-space: pre;
+	white-space: break-spaces;
 	word-spacing: normal;
 	word-break: normal;
 	word-wrap: normal;
@@ -210,8 +300,6 @@ pre[class*="language-"] {
 pre[class*="language-"] {
 	padding: 1em;
 	margin: .5em 0;
-	overflow: auto;
-	border-radius: 0.3em;
 }
 
 :not(pre) > code[class*="language-"],
@@ -222,8 +310,6 @@ pre[class*="language-"] {
 /* Inline code */
 :not(pre) > code[class*="language-"] {
 	padding: .1em;
-	border-radius: .3em;
-	white-space: normal;
 }
 
 .token.comment,

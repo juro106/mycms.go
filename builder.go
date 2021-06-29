@@ -11,6 +11,7 @@ import (
     // "reflect"
 	"io"
 	"os"
+    "regexp"
 	// "os/exec"
 	"path/filepath"
 	"path"
@@ -21,6 +22,7 @@ import (
 	// "time"
     "html/template"
     // "encoding/json"
+    "sync"
 
 	// "github.com/flosch/pongo2"
 	// "github.com/howeyc/fsnotify"
@@ -41,7 +43,8 @@ func checkFatal(err error) {
 type Item struct {
     Title string
     Slug  string
-    Description string
+    Body  template.HTML
+    Intro string
 }
 type PageB2Tag map[string][]Item
 
@@ -63,10 +66,12 @@ type Meta struct {
     Permalink     string                     `yaml:"permalink"`         //
     Body          template.HTML              `yaml:"body"`         //
     Dist          string
+    TagTpls       []string
     PageTag       PageB2Tag
     B2Page        []Item
     Plist         []Meta
     Site          *Config
+    PB2T          []template.HTML
 }
 
 type Config struct {
@@ -102,6 +107,7 @@ var taglist []string
 // page-belong-to-tag リスト
 var pageB2taglist PageB2Tag = PageB2Tag{}
 // map[string][]string = map[string][]string{}
+var pB2tMap map[string]template.HTML = map[string]template.HTML{}
 
 func time2int (args interface{}) int {
     dateTime := args.(string)
@@ -154,6 +160,17 @@ func urlJoin(l, r string) string {
     return l + r + "/"
 }
 
+func removeTag(str string) string {
+    rep := regexp.MustCompile(`<("[^"]*"|'[^']*'|[^'">])*>`)
+    str = rep.ReplaceAllString(str, "")
+    return str
+}
+func sliceStr(str string, num int) string {
+    if len(str) > num {
+        return str[:num]
+    }
+    return str
+}
 // ページ作成の準備、タグページや関連リンク作成用の下準備
 func (cfg *Config) collectData(dirName string) {
     // ディレクトリのファイル一覧を得る
@@ -228,14 +245,19 @@ func (cfg *Config) collectData(dirName string) {
         if len(meta.Tags) > 0 {
             // page-tag-list
             taglist = append(taglist, meta.Tags...)
+            var tagTpls []string
             // tag-page-list
             for _, tag := range meta.Tags {
                 var item Item
                 item.Title = meta.Title
                 item.Slug = meta.Slug
-                item.Description = meta.Description
+                item.Intro = sliceStr(removeTag(string(meta.Body)), 100)
+                item.Body = meta.Body
                 pageB2taglist[tag] = append(pageB2taglist[tag], item)
+                tag = "./_layouts/pB2t/" + tag + ".html"
+                tagTpls = append(tagTpls, tag)
             }
+            meta.TagTpls = tagTpls
         }
         // リストへデータ追加
         if dirName == "./_pages" {
@@ -262,28 +284,77 @@ func (cfg *Config) convertFile(tpl, ptype string) {
     }
     // テンプレートの読み込み
     t := template.Must(template.ParseFiles(tpl, "./_layouts/head.html", "./_layouts/footer.html"))
+
+    // semaphore
+    // semaphore := make(chan struct{}, 100)
+    var wg sync.WaitGroup
+    // var mu sync.Mutex
+
     for _, meta := range list {
-        if ptype == "page" && meta.Slug == "/" {
-            meta.Plist = postlist
-        }
-        if ptype == "post" {
-            var postB2tag PageB2Tag = PageB2Tag{}
-            for _, tag := range meta.Tags {
-                postB2tag[tag] = pageB2taglist[tag]
+        wg.Add(1)
+        // semaphore <- struct{}{}
+        go func(meta2 Meta) {
+            defer func() {
+                wg.Done()
+                // <-semaphore
+            }()
+
+            // mu.Lock()
+            // defer mu.Unlock()
+
+            if ptype == "page" && meta2.Slug == "/" {
+                meta2.Plist = postlist
             }
-            meta.PageTag = postB2tag
-        }
-        if ptype == "tag" {
-            meta.B2Page = pageB2taglist[meta.Slug]
-        }
-        // テンプレートへ反映させて書き込み
-        new_buf := new(bytes.Buffer)
-        if err := t.Execute(new_buf, meta); err != nil {
-            log.Println("create file", err)
-        }
-        os.WriteFile(meta.Dist, new_buf.Bytes(), 0644)
-        fmt.Printf("<<===== ConvertFile %s WriteFile完了 ======>>>\n", meta.Dist)
+            if ptype == "tag" {
+                meta2.B2Page = pageB2taglist[meta2.Slug]
+                tt := template.Must(template.ParseFiles("./_layouts/pB2t.html"))
+                // fmt.Printf("meta2 %#v\n", meta2.B2Page)
+                // meta2.TplDef = "{{- define " + meta2.Slug + " }}"
+
+                // tt := template.Must(template.New(tVal).Parse(tmp))
+                buf := new(bytes.Buffer)
+                if err := tt.Execute(buf, meta2); err != nil {
+                    log.Println("create file", err)
+                }
+                // fmt.Printf("type of &buf: %s\n", reflect.TypeOf(buf))
+                b := fmt.Sprintf("%v\n", buf)
+                html := template.HTML(b)
+                pB2tMap[meta2.Slug] = html
+                // fmt.Printf("type of buf: %s\n", reflect.TypeOf(hoge))
+                // fmt.Printf("type of buf: %s\n", reflect.TypeOf(fuga))
+                // dst := "./_layouts/pB2t/" + meta2.Slug + ".html"
+                // os.WriteFile(dst, buf.Bytes(), 0644)
+            }
+            if ptype == "post" {
+                for _, tag := range meta2.Tags {
+                    meta2.PB2T = append(meta2.PB2T, pB2tMap[tag])
+                }
+                // now := time.Now()
+                // var postB2tag PageB2Tag = PageB2Tag{}
+                // for _, tag := range meta2.Tags {
+                //     postB2tag[tag] = pageB2taglist[tag]
+                // }
+                // meta2.PageTag = postB2tag
+                // if len(meta2.TagTpls) > 0 {
+                //     Tpls := []string{tpl, "./_layouts/head.html", "./_layouts/footer.html"}
+                //     Tpls = append(Tpls, meta2.TagTpls...)
+                //     // fmt.Println(Tpls)
+                //     t = template.Must(template.ParseFiles(Tpls...))
+                //     // fmt.Printf("ページ-タグ登録処理時間: %vms\n", time.Since(now).Milliseconds())
+                // }
+            }
+            // テンプレートへ反映させて書き込み
+            // now := time.Now()
+            new_buf := new(bytes.Buffer)
+            if err := t.Execute(new_buf, meta2); err != nil {
+                log.Println("create file", err)
+            }
+            os.WriteFile(meta2.Dist, new_buf.Bytes(), 0644)
+            // fmt.Printf("ファイル書き込み処理時間: %vms\n", time.Since(now).Milliseconds())
+            fmt.Printf("%s WriteFile完了 ======>>>\n", meta2.Dist)
+        }(meta)
     }
+    wg.Wait()
 }
 
 func main() {
@@ -298,10 +369,15 @@ func main() {
         log.Fatal(err)
     }
     // データ収集 
+    // now := time.Now()
+    // time.Sleep(time.Second * 3)
     cfg.collectData("./_pages")
+    // fmt.Printf("pages data 経過: %vms\n", time.Since(now).Milliseconds())
+    // now = time.Now()
     cfg.collectData("./_posts")
+    // fmt.Printf("posts data 経過: %vms\n", time.Since(now).Milliseconds())
 
-    // tag ページ生成
+    // tag mdファイル生成
     // ① taglistの重複を削除する
     taglistM := make(map[string]struct{})
     tagList := make([]string, 0)
@@ -325,13 +401,22 @@ func main() {
             copyFile("./_layouts/tag.md", srcFile)
         }
     }
-    // pages ページ生成
-    cfg.convertFile("./_layouts/default.html", "page")
-    // posts ページ生成
-    cfg.convertFile("./_layouts/post.html", "post")
-    // tag ページ生成
+    // now = time.Now()
     cfg.collectData("./_tags")
+    // fmt.Printf("tags data 経過: %vms\n", time.Since(now).Milliseconds())
+
+    // pages ページ生成
+    // now = time.Now()
+    cfg.convertFile("./_layouts/default.html", "page")
+    // fmt.Printf("pages 生成: %vms\n", time.Since(now).Milliseconds())
+    // tag ページ生成
+    // now = time.Now()
     cfg.convertFile("./_layouts/tag.html", "tag")
+    // fmt.Printf("tags 生成: %vms\n", time.Since(now).Milliseconds())
+    // posts ページ生成
+    // now = time.Now()
+    cfg.convertFile("./_layouts/post.html", "post")
+    // fmt.Printf("posts 生成: %vms\n", time.Since(now).Milliseconds())
 
     // fmt.Printf("type of taglist: %#v\n", reflect.TypeOf(taglist))
 

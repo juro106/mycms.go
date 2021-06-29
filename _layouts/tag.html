@@ -8,7 +8,7 @@
         <main id="main">
         <article id="article">
             <header id="article-header">
-                <h1 id="page-title">{{ .Title }}</h1>
+                <h1 id="page-title">{{ .Slug }}</h1>
             </header>
             {{- .Body }}
             {{- with .B2Page }}
@@ -17,7 +17,7 @@
                 <li class="related-list-item">
                     <a class="related-link" href="/{{ $val.Slug }}/">
                         <div class="item-title">{{ $val.Title }}</div>
-                        <div class="dscr">{{ $val.Description }}</div>
+                        <div class="dscr">{{ $val.Intro }}</div>
                     </a>
                 </li>
                 {{- end }}

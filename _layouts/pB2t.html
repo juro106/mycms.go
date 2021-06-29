@@ -1,0 +1,13 @@
+<h3 class="heading-link">{{ .Slug }}</h3>
+{{- with .B2Page }}
+<ul class="related-list">
+    {{- range $val := . }}
+    <li class="related-list-item">
+        <a class="related-link" href="/{{ $val.Slug }}/">
+            <div class="item-title">{{ $val.Title }}</div>
+            <div class="dscr">{{ $val.Intro }}</div>
+        </a>
+    </li>
+    {{- end }}
+</ul>
+{{- end }}

@@ -44,19 +44,10 @@
         </ul>
     </div>
     {{- end }}
-    {{- with .PageTag }}
-        {{- range $key, $val := . }}
-        <h3>{{- $key -}}</h3>
-        <ul class="related-list">
-            {{- range $v := $val }}
-            <li class="related-list-item">
-                <a class="related-link" href="/{{- $v.Slug -}}/">
-                    <div class="item-title">{{- $v.Title -}}</div>
-                    <div class="dscr">{{- $v.Description -}}</div>
-                </a> 
-            </li>
-            {{- end }}
-        </ul>
+    {{- with .PB2T }}
+        {{ range $key, $val := . }}
+        {{- $val -}}
+
         {{- end }}
     {{- end }}
     </main>
